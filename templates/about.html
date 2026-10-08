@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}About - Contact Search System{% endblock %}
+
+{% block content %}
+<h1>About</h1>
+<p>
+  Each contact is a name and a phone number. The same contact object is
+  stored in two places.
+</p>
+<ul class="about-list">
+  <li>A doubly linked list keeps contacts in the order you added them, so the list can be read forward or backward.</li>
+  <li>A hash table (a Python dictionary) maps each name to that same contact for an exact lookup.</li>
+  <li>Keyword search walks the list and uses naive substring matching on the name.</li>
+</ul>
+<p>
+  Contacts stay in memory while the server is running. The same book is
+  available as a text menu with <code>python menu.py</code>.
+</p>
+<p>
+  <a href="{{ url_for('index') }}">Back to contacts</a>
+</p>
+{% endblock %}

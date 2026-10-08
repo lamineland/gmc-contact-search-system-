@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Contacts - Contact Search System{% endblock %}
+
+{% block content %}
+<h1>Contacts</h1>
+<p class="lede">Add a name and phone, then find people by a keyword or by their exact name.</p>
+
+<section class="panel" aria-labelledby="add-heading">
+  <h2 id="add-heading">Add a contact</h2>
+  <form class="stack-form" method="post" action="{{ url_for('add_contact') }}">
+    <div class="field">
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" autocomplete="name"
+             placeholder="Alice" required maxlength="80">
+    </div>
+    <div class="field">
+      <label for="phone">Phone</label>
+      <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel"
+             placeholder="1234567890" required maxlength="40">
+    </div>
+    <input type="hidden" name="order" value="{{ order }}">
+    {% if keyword_active %}
+      <input type="hidden" name="keyword" value="{{ keyword }}">
+    {% endif %}
+    {% if exact_active %}
+      <input type="hidden" name="exact" value="{{ exact }}">
+    {% endif %}
+    <button type="submit">Add contact</button>
+  </form>
+</section>
+
+<section class="panel" aria-labelledby="search-heading">
+  <h2 id="search-heading">Search</h2>
+  <div class="search-grid">
+    <form class="stack-form" method="get" action="{{ url_for('index') }}">
+      <h3>Search by keyword</h3>
+      <p class="hint" id="keyword-hint">Finds names that contain this text.</p>
+      <input type="hidden" name="order" value="{{ order }}">
+      {% if exact_active %}
+        <input type="hidden" name="exact" value="{{ exact }}">
+      {% endif %}
+      <div class="field">
+        <label for="keyword">Keyword</label>
+        <input id="keyword" name="keyword" type="search" value="{{ keyword }}"
+               placeholder="Al" autocomplete="off"
+               aria-describedby="keyword-hint{% if keyword_error %} keyword-error{% endif %}"
+               {% if keyword_error %}aria-invalid="true"{% endif %}>
+      </div>
+      {% if keyword_error %}
+        <p class="field-error" id="keyword-error">{{ keyword_error }}</p>
+      {% endif %}
+      <div class="form-actions">
+        <button type="submit">Search by keyword</button>
+        {% if keyword_active %}
+          <a class="clear-link" href="{{ clear_keyword_url }}">Clear keyword</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <form class="stack-form" method="get" action="{{ url_for('index') }}">
+      <h3>Search by exact name</h3>
+      <p class="hint" id="exact-hint">Looks up the full name in the hash table.</p>
+      <input type="hidden" name="order" value="{{ order }}">
+      {% if keyword_active %}
+        <input type="hidden" name="keyword" value="{{ keyword }}">
+      {% endif %}
+      <div class="field">
+        <label for="exact">Exact name</label>
+        <input id="exact" name="exact" type="search" value="{{ exact }}"
+               placeholder="Alice" autocomplete="off"
+               aria-describedby="exact-hint{% if exact_error %} exact-error{% endif %}"
+               {% if exact_error %}aria-invalid="true"{% endif %}>
+      </div>
+      {% if exact_error %}
+        <p class="field-error" id="exact-error">{{ exact_error }}</p>
+      {% endif %}
+      <div class="form-actions">
+        <button type="submit">Search by name</button>
+        {% if exact_active %}
+          <a class="clear-link" href="{{ clear_exact_url }}">Clear name</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  {% if keyword_active and not keyword_error %}
+    <div class="search-results">
+      <h3>Keyword matches</h3>
+      {% if keyword_matches %}
+        <ul class="match-list">
+          {% for contact in keyword_matches %}
+            <li>Match found: {{ contact.name }} - <a href="tel:{{ contact.phone }}">{{ contact.phone }}</a></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty">No match found for &ldquo;{{ keyword }}&rdquo;.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if exact_active and not exact_error %}
+    <div class="search-results">
+      <h3>Exact name</h3>
+      {% if exact_contact %}
+        <p class="match">Match found: {{ exact_contact.name }} - <a href="tel:{{ exact_contact.phone }}">{{ exact_contact.phone }}</a></p>
+      {% elif exact_missing %}
+        <p class="empty">No contact named {{ exact }}.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</section>
+
+<section class="panel" aria-labelledby="directory-heading">
+  <div class="section-row">
+    <h2 id="directory-heading">All contacts</h2>
+    <nav class="order-toggle" aria-label="List order">
+      <a href="{{ forward_url }}" {% if order == 'forward' %}aria-current="page"{% endif %}>Forward</a>
+      <a href="{{ backward_url }}" {% if order == 'backward' %}aria-current="page"{% endif %}>Backward</a>
+    </nav>
+  </div>
+  {% if order == 'forward' %}
+    <p class="hint">From the first contact added to the most recent.</p>
+  {% else %}
+    <p class="hint">From the most recent contact back to the first.</p>
+  {% endif %}
+
+  {% if contacts %}
+    <p class="result-count">{{ contacts|length }} contact{% if contacts|length != 1 %}s{% endif %}</p>
+    <div class="table-wrap">
+      <table class="contacts-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Phone</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for contact in contacts %}
+            <tr>
+              <td>{{ contact.name }}</td>
+              <td><a href="tel:{{ contact.phone }}">{{ contact.phone }}</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="empty">No contacts yet. Add a name and phone above.</p>
+  {% endif %}
+</section>
+{% endblock %}
